@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_codabee_meteo/my_flutter_app_icons.dart';
 import 'package:flutter_codabee_meteo/temperature.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:location/location.dart';
@@ -55,6 +56,8 @@ class _MyHomePageState extends State<MyHomePage> {
   AssetImage night = new AssetImage("assets/n.jpg");
   AssetImage sun = new AssetImage("assets/d1.jpg");
   AssetImage rain = new AssetImage("assets/d2.jpg");
+
+  String nameCurrent = "Ville actuelle";
   
   @override
   void initState() {
@@ -96,11 +99,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               }else if(i == 1){
                 return new ListTile(
-                  title: texteAvecStyle("Ma ville actuelle"),
+                  title: texteAvecStyle(nameCurrent),
                   onTap: () {
                     setState(() {
                       villeChoisie = null;
                       coordsVilleChoisie = null;
+                      apiMeteo();
                       Navigator.pop(context);
                     });
                   },
@@ -129,7 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body:
       temperature == null ?
       Center(
-        child: new Text(villeChoisie ?? "Ville actuelle"),
+        child: new Text(villeChoisie ?? nameCurrent),
       )
       :
       new Container(
@@ -141,7 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: new Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            texteAvecStyle(villeChoisie ?? "Ville actuelle", fontSize: 40.0, fontStyle: FontStyle.italic),
+            texteAvecStyle(villeChoisie ?? nameCurrent, fontSize: 40.0, fontStyle: FontStyle.italic),
             texteAvecStyle(temperature.description, fontSize: 30.0),
             new Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -149,10 +153,29 @@ class _MyHomePageState extends State<MyHomePage> {
                 new Image(image: getIcon(),),
                 texteAvecStyle("${temperature.temp.toInt()} °C", fontSize: 75.0)
               ],
+            ),
+            new Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                extra("${temperature.min.toInt()} °C", MyFlutterApp.down),
+                extra("${temperature.max.toInt()} °C", MyFlutterApp.up),
+                extra("${temperature.pressure.toInt()}", MyFlutterApp.temperatire),
+                extra("${temperature.humidity.toInt()}%", MyFlutterApp.drizzle),
+              ],
             )
           ],
         ),
       ),
+    );
+  }
+
+  Column extra(String data, IconData iconData) {
+    return new Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Icon(iconData, color: Colors.white, size: 32.0,),
+        texteAvecStyle(data)
+      ],
     );
   }
 
@@ -239,18 +262,26 @@ class _MyHomePageState extends State<MyHomePage> {
     if(locationData != null) {
       Coordinates coordinates = new Coordinates(locationData.latitude, locationData.longitude);
       final addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
-      print('${addresses.first.locality}');
-      apiMeteo();
+
+      if(addresses.length > 0){
+        setState(() {
+          nameCurrent = addresses.first.locality;
+          print(nameCurrent);
+          apiMeteo();
+        });
+
+      }
     }
   }
 
   void coordsFromCity() async {
-    if(villeChoisie != null && villeChoisie.isNotEmpty){
+    if(villeChoisie != null){
       List<Address> addresses = await Geocoder.local.findAddressesFromQuery(villeChoisie);
-      if(addresses.isNotEmpty){
+      if(addresses.length > 0){
         Address first = addresses.first;
+        Coordinates coords = first.coordinates;
         setState(() {
-          coordsVilleChoisie = first.coordinates;
+          coordsVilleChoisie = coords;
           print(coordsVilleChoisie);
           apiMeteo();
         });

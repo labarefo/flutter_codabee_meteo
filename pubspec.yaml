@@ -63,6 +63,12 @@ flutter:
     - assets/d1.jpg
     - assets/d2.jpg
     - assets/n.jpg
+
+  fonts:
+    - family: MyFlutterApp
+      fonts:
+        - asset: fluttericons/fonts/MyFlutterApp.ttf
+
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
